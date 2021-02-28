@@ -8,6 +8,8 @@ import { Container, Row, Col, Form, Button } from "react-bootstrap";
 
 import "./App.css";
 
+const SuperfluidSDK = require("@superfluid-finance/js-sdk");
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -56,44 +58,55 @@ class App extends Component {
     });
     const web3 = new Web3(biconomy);
 
-    biconomy.onEvent(biconomy.READY, async () => {
-      web3.eth.getAccounts((error, accounts) => {
-        console.log(accounts);
-      });
-  
-      const network = await web3.eth.net.getNetworkType();
-  
-      const account = (await web3.eth.getAccounts())[0];
-      const balance = await web3.eth.getBalance(account);
-      this.setState({
-        balance: web3.utils.fromWei(balance, "ether"),
-        account: account,
-        network: network,
-      });
-  
-      const NFT = new web3.eth.Contract(AssetABI.abi, AssetAddress);
-      this.setState({ NFT });
-  
-      await NFT.methods.setAvailableTokens().call();
-      const available = await NFT.methods.getAvailableTokens().call();
-  
-      await NFT.methods.setRentedTokens().call({ from: this.state.account });
-      const rented = await NFT.methods
-        .getRentedTokens()
-        .call({ from: this.state.account });
-      console.log(available);
-      console.log(rented);
-      this.setState({
-        available: available,
-        rented: rented,
-      });
+    biconomy
+      .onEvent(biconomy.READY, async () => {
+        web3.eth.getAccounts((error, accounts) => {
+          console.log(accounts);
+        });
 
-      this.setState({
-        loading: false,
+        const network = await web3.eth.net.getNetworkType();
+
+        const account = (await web3.eth.getAccounts())[0];
+        const balance = await web3.eth.getBalance(account);
+        this.setState({
+          balance: web3.utils.fromWei(balance, "ether"),
+          account: account,
+          network: network,
+        });
+
+        const NFT = new web3.eth.Contract(AssetABI, AssetAddress);
+        console.log(NFT);
+        this.setState({ NFT });
+
+        await NFT.methods.setAvailableTokens().call();
+        const available = await NFT.methods.getAvailableTokens().call();
+
+        await NFT.methods.setRentedTokens().call({ from: this.state.account });
+        const rented = await NFT.methods
+          .getRentedTokens()
+          .call({ from: this.state.account });
+        console.log(available);
+        console.log(rented);
+        this.setState({
+          available: available,
+          rented: rented,
+        });
+
+        const sf = new SuperfluidSDK.Framework({
+          web3: web3,
+          tokens: ["fDAI"],
+        });
+        await sf.initialize();
+        console.log(sf);
+        this.setState({ sf });
+
+        this.setState({
+          loading: false,
+        });
+      })
+      .onEvent(biconomy.ERROR, (error, message) => {
+        console.error(error, message);
       });
-    }).onEvent(biconomy.ERROR, (error, message) => {
-      console.error(error, message);
-    });
   }
 
   render() {
