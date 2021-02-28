@@ -1,6 +1,7 @@
 export const DAIxAddress = "0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f";
+export const DAIAddress = "0x15F0Ca26781C3852f8166eD2ebce5D18265cceb7";
 
-export const AssetAddress = '0xD84182680134f65C72a3830025351a5C9547755c';
+export const AssetAddress = '0xb2F10DDD09C59a37d883c20Ab3F4fF0eacDefF0D';
 export const AssetABI = [
   {
     "inputs": [
@@ -16,17 +17,17 @@ export const AssetABI = [
       },
       {
         "internalType": "contract ISuperfluid",
-        "name": "host",
+        "name": "_host",
         "type": "address"
       },
       {
         "internalType": "contract IConstantFlowAgreementV1",
-        "name": "cfa",
+        "name": "_cfa",
         "type": "address"
       },
       {
         "internalType": "contract ISuperToken",
-        "name": "acceptedToken",
+        "name": "_acceptedToken",
         "type": "address"
       }
     ],
