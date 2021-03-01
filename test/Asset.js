@@ -161,9 +161,6 @@ describe("Asset Contract", () => {
     let initialOwner2 = await NFTAsset.ownerOf(assetId2);
     expect(initialOwner2).to.equal(deployer);
 
-    await NFTAsset.setAvailableTokens();
-    console.log(await NFTAsset.getAvailableTokens());
-
     await sf.cfa.createFlow({
       flowRate: flowRate.toString(),
       receiver: users.app.address,
@@ -174,9 +171,6 @@ describe("Asset Contract", () => {
 
     let currentOwner1 = await NFTAsset.ownerOf(assetId1);
     expect(currentOwner1).to.equal(addr1);
-
-    await NFTAsset.setRentedTokens({ from: addr1 });
-    console.log(await NFTAsset.getRentedTokens());
 
     await sf.cfa.updateFlow({
       flowRate: flowRate.mul(toBN(2)).toString(),

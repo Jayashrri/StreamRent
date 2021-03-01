@@ -1,7 +1,7 @@
 export const DAIxAddress = "0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f";
 export const DAIAddress = "0x15F0Ca26781C3852f8166eD2ebce5D18265cceb7";
 
-export const AssetAddress = '0xb2F10DDD09C59a37d883c20Ab3F4fF0eacDefF0D';
+export const AssetAddress = '0x99f9AC289241eaA121583145BdcE74B0F1E93c6b';
 export const AssetABI = [
   {
     "inputs": [
@@ -17,17 +17,17 @@ export const AssetABI = [
       },
       {
         "internalType": "contract ISuperfluid",
-        "name": "_host",
+        "name": "host",
         "type": "address"
       },
       {
         "internalType": "contract IConstantFlowAgreementV1",
-        "name": "_cfa",
+        "name": "cfa",
         "type": "address"
       },
       {
         "internalType": "contract ISuperToken",
-        "name": "_acceptedToken",
+        "name": "acceptedToken",
         "type": "address"
       }
     ],
@@ -451,9 +451,9 @@ export const AssetABI = [
     "name": "getAvailableTokens",
     "outputs": [
       {
-        "internalType": "uint256[]",
+        "internalType": "bytes32[]",
         "name": "",
-        "type": "uint256[]"
+        "type": "bytes32[]"
       }
     ],
     "stateMutability": "view",
@@ -464,9 +464,9 @@ export const AssetABI = [
     "name": "getRentedTokens",
     "outputs": [
       {
-        "internalType": "uint256[]",
+        "internalType": "bytes32[]",
         "name": "",
-        "type": "uint256[]"
+        "type": "bytes32[]"
       }
     ],
     "stateMutability": "view",
@@ -594,32 +594,6 @@ export const AssetABI = [
     ],
     "name": "setApprovalForAll",
     "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "setAvailableTokens",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "setRentedTokens",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },

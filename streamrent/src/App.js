@@ -38,9 +38,6 @@ class App extends Component {
       .createAsset(tokenURI)
       .send({ from: this.state.account });
     console.log(result);
-    await this.state.NFT.methods
-      .setAvailableTokens()
-      .send({ from: this.state.account });
     const available = await this.state.NFT.methods.getAvailableTokens().call();
     console.log(available);
 
@@ -81,12 +78,7 @@ class App extends Component {
         console.log(NFT);
         this.setState({ NFT });
 
-        await NFT.methods
-          .setAvailableTokens()
-          .send({ from: this.state.account });
         const available = await NFT.methods.getAvailableTokens().call();
-
-        await NFT.methods.setRentedTokens().send({ from: this.state.account });
         const rented = await NFT.methods
           .getRentedTokens()
           .call({ from: this.state.account });

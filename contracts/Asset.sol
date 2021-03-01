@@ -9,14 +9,15 @@ import "./Payment.sol";
 contract Asset is ERC721, Payment {
     using Counters for Counters.Counter;
     using EnumerableMap for EnumerableMap.UintToAddressMap;
+    using EnumerableSet for EnumerableSet.UintSet;
 
     Counters.Counter private _tokenIds;
 
     EnumerableMap.UintToAddressMap private _tokenCreators;
+    EnumerableSet.UintSet private _available;
 
+    mapping(address => EnumerableSet.UintSet) private rented;
     mapping(uint256 => int96) private records;
-    uint256[] private availableIds;
-    uint256[] private rentedIds;
 
     constructor(
         string memory _name,
@@ -28,30 +29,12 @@ contract Asset is ERC721, Payment {
 
     receive() external payable {}
 
-    function setAvailableTokens() public returns (bool) {
-        delete availableIds;
-        for (uint256 i = 0; i < totalSupply(); i++) {
-            if (ownerOf(tokenByIndex(i)) == _tokenCreators.get(tokenByIndex(i)))
-                availableIds.push(tokenByIndex(i));
-        }
-        return true;
+    function getAvailableTokens() public view returns (bytes32[] memory) {
+        return _available._inner._values;
     }
 
-    function getAvailableTokens() public view returns (uint256[] memory) {
-        return availableIds;
-    }
-
-    function setRentedTokens() public returns (bool) {
-        delete rentedIds;
-        for (uint256 i = 0; i < balanceOf(msg.sender); i++) {
-            if (_tokenCreators.get(tokenByIndex(i)) != msg.sender)
-                rentedIds.push(tokenByIndex(i));
-        }
-        return true;
-    }
-
-    function getRentedTokens() public view returns (uint256[] memory) {
-        return rentedIds;
+    function getRentedTokens() public view returns (bytes32[] memory) {
+        return rented[msg.sender]._inner._values;
     }
 
     function createAsset(string memory tokenURI) public returns (uint256) {
@@ -61,6 +44,7 @@ contract Asset is ERC721, Payment {
         _safeMint(msg.sender, newAssetId);
         _setTokenURI(newAssetId, tokenURI);
         _tokenCreators.set(newAssetId, msg.sender);
+        _available.add(newAssetId);
 
         return newAssetId;
     }
@@ -108,6 +92,8 @@ contract Asset is ERC721, Payment {
 
                 records[tokenId] = netFlowRate;
                 _safeTransfer(ownerOf(tokenId), requester, tokenId, "");
+                _available.remove(tokenId);
+                rented[requester].add(tokenId);
             } else {
                 (newCtx, ) = host.callAgreementWithContext(
                     cfa,
@@ -161,7 +147,8 @@ contract Asset is ERC721, Payment {
                         newCtx
                     );
                 }
-
+                _available.add(tokenId);
+                rented[requester].remove(tokenId);
                 delete records[tokenId];
             }
         }
