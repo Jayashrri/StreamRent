@@ -30,19 +30,22 @@ class App extends Component {
     this.loadData();
   }
 
-  async mintAsset() {
+  async mintAsset(e) {
     let tokenURI = this.state.newURI;
     this.setState({ loading: true });
 
-    await this.state.NFT.methods
+    const result = await this.state.NFT.methods
       .createAsset(tokenURI)
-      .call({ from: this.state.account });
-    await this.state.NFT.methods.setAvailableTokens().call();
+      .send({ from: this.state.account });
+    console.log(result);
+    await this.state.NFT.methods
+      .setAvailableTokens()
+      .send({ from: this.state.account });
     const available = await this.state.NFT.methods.getAvailableTokens().call();
     console.log(available);
 
     this.setState({
-      available: available,
+      // available: available,
       loading: false,
     });
   }
@@ -74,14 +77,16 @@ class App extends Component {
           network: network,
         });
 
-        const NFT = new web3.eth.Contract(AssetABI, AssetAddress);
+        const NFT = await new web3.eth.Contract(AssetABI, AssetAddress);
         console.log(NFT);
         this.setState({ NFT });
 
-        await NFT.methods.setAvailableTokens().call();
+        await NFT.methods
+          .setAvailableTokens()
+          .send({ from: this.state.account });
         const available = await NFT.methods.getAvailableTokens().call();
 
-        await NFT.methods.setRentedTokens().call({ from: this.state.account });
+        await NFT.methods.setRentedTokens().send({ from: this.state.account });
         const rented = await NFT.methods
           .getRentedTokens()
           .call({ from: this.state.account });
@@ -124,7 +129,7 @@ class App extends Component {
               <p> Account Balance : {this.state.balance} </p>
             </Row>
             <Row>
-              <Form>
+              <Form onSubmit={this.mintAsset}>
                 <Form.Group>
                   <Form.Control
                     type="text"
@@ -133,9 +138,7 @@ class App extends Component {
                     onChange={(e) => this.setState({ newURI: e.target.value })}
                   />
                 </Form.Group>
-                <Button type="button" onClick={this.mintAsset}>
-                  Create Asset
-                </Button>
+                <Button type="submit">Create Asset</Button>
               </Form>
             </Row>
             <Row>
