@@ -2,13 +2,13 @@ import React, { Component } from "react";
 import Web3 from "web3";
 import Portis from "@portis/web3";
 import { Biconomy } from "@biconomy/mexa";
-import { AssetAddress, AssetABI } from "./config.js";
-
+import { AssetAddress, AssetABI, DAIxAddress } from "./config.js";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 
 import "./App.css";
 
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
+const { web3tx, toWad, toBN } = require("@decentral.ee/web3-helpers");
 
 class App extends Component {
   constructor(props) {
@@ -24,6 +24,8 @@ class App extends Component {
     };
 
     this.mintAsset = this.mintAsset.bind(this);
+    this.rentAsset = this.rentAsset.bind(this);
+    this.returnAsset = this.returnAsset.bind(this);
   }
 
   componentDidMount() {
@@ -31,6 +33,10 @@ class App extends Component {
   }
 
   async mintAsset(e) {
+    this.setState({
+      loading: true,
+    });
+
     let tokenURI = this.state.newURI;
     this.setState({ loading: true });
 
@@ -42,7 +48,65 @@ class App extends Component {
     console.log(available);
 
     this.setState({
-      // available: available,
+      available: available,
+      loading: false,
+    });
+  }
+
+  async rentAsset(e) {
+    this.setState({
+      loading: true,
+    });
+
+    let tokenURI = e.target.getAttribute("data-token");
+    let contract = this.state.NFT._address;
+    let sf = this.state.sf;
+    console.log(contract);
+
+    let flowRate = toWad("1").div(toBN(3600));
+
+    await sf.cfa.createFlow({
+      flowRate: flowRate.toString(),
+      receiver: contract,
+      sender: this.state.user.address,
+      superToken: DAIxAddress,
+      userData: this.state.web3.eth.abi.encodeParameter("uint256", tokenURI),
+    });
+
+    const available = await this.state.NFT.methods.getAvailableTokens().call();
+    const rented = await this.state.NFT.methods.getRentedTokens().call();
+
+    this.setState({
+      available: available,
+      rented: rented,
+      loading: false,
+    });
+  }
+
+  async returnAsset(e) {
+    this.setState({
+      loading: true,
+    });
+
+    let tokenURI = e.target.getAttribute("data-token");
+    let contract = this.state.NFT._address;
+    let sf = this.state.sf;
+    console.log(contract);
+
+    await sf.cfa.deleteFlow({
+      by: this.state.user.address,
+      receiver: contract,
+      sender: this.state.user.address,
+      superToken: DAIxAddress,
+      userData: this.state.web3.eth.abi.encodeParameter("uint256", tokenURI),
+    });
+
+    const available = await this.state.NFT.methods.getAvailableTokens().call();
+    const rented = await this.state.NFT.methods.getRentedTokens().call();
+
+    this.setState({
+      available: available,
+      rented: rented,
       loading: false,
     });
   }
@@ -60,18 +124,35 @@ class App extends Component {
 
     biconomy
       .onEvent(biconomy.READY, async () => {
+        this.setState({
+          web3: web3,
+        });
+        
         web3.eth.getAccounts((error, accounts) => {
           console.log(accounts);
         });
 
         const network = await web3.eth.net.getNetworkType();
+        const sf = new SuperfluidSDK.Framework({
+          web3,
+          tokens: ["fDAI"],
+        });
+        await sf.initialize();
 
         const account = (await web3.eth.getAccounts())[0];
         const balance = await web3.eth.getBalance(account);
+
+        const user = sf.user({
+          address: account,
+          token: DAIxAddress,
+        });
+
         this.setState({
           balance: web3.utils.fromWei(balance, "ether"),
           account: account,
+          user: user,
           network: network,
+          sf: sf,
         });
 
         const NFT = await new web3.eth.Contract(AssetABI, AssetAddress);
@@ -88,14 +169,6 @@ class App extends Component {
           available: available,
           rented: rented,
         });
-
-        const sf = new SuperfluidSDK.Framework({
-          web3: web3,
-          tokens: ["fDAI"],
-        });
-        await sf.initialize();
-        console.log(sf);
-        this.setState({ sf });
 
         this.setState({
           loading: false,
@@ -118,6 +191,8 @@ class App extends Component {
             </Row>
             <Row>
               <p> Account address : {this.state.account} </p>
+            </Row>
+            <Row>
               <p> Account Balance : {this.state.balance} </p>
             </Row>
             <Row>
@@ -133,20 +208,30 @@ class App extends Component {
                 <Button type="submit">Create Asset</Button>
               </Form>
             </Row>
+            <br></br>
             <Row>
               <Col>
-                <ul>
-                  {this.state.available.map((item, index) => (
+                <h3>Available Tokens</h3>
+                {this.state.available.map((item, index) => (
+                  <div>
                     <li>{item}</li>
-                  ))}
-                </ul>
+                    <Button data-token={item} onClick={this.rentAsset}>
+                      Rent
+                    </Button>
+                  </div>
+                ))}
               </Col>
               <Col>
-                <ul>
-                  {this.state.rented.map((item, index) => (
+                <h3>Rented Tokens</h3>
+
+                {this.state.rented.map((item, index) => (
+                  <div>
                     <li>{item}</li>
-                  ))}
-                </ul>
+                    <Button data-token={item} onClick={this.returnAsset}>
+                      Return
+                    </Button>
+                  </div>
+                ))}
               </Col>
             </Row>
           </Container>
